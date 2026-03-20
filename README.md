@@ -16,7 +16,7 @@ This is a comprehensive, full-stack web application designed for a theoretical *
 To successfully initialize this project on a new machine, you **must run the three SQL scripts inside your MySQL Workbench in the exact order below:**
 
 1. **`PatchlyDB_Schema.sql`**
-   * *What it does:* Drops any existing `PatchlyDB` database, creates a fresh database structure, defines all the relational tables, sets foreign key constraints, and injects **two physical Database Triggers** to ensure data integrity during bug assignments.
+   * *What it does:* Drops any existing `PatchlyDB` database, creates a fresh database structure, defines all the relational tables, sets foreign key constraints, and injects **physical Database Triggers** to ensure data integrity during bug assignments.
 2. **`PatchlyDB_Spotify_SampleData.sql`**
    * *What it does:* Seeds the database with all primary lookup data (Platforms, Sentiments, Priority Levels, SLA rules, Engineering Skills, Department configurations, and System User Authentications). It also includes the first 5 base Spotify bug reports.
 3. **`PatchlyDB_Spotify_20_Reviews.sql`**
