@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patchly — Engineer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- TOP NAV -->
+    <nav class="topnav">
+        <div class="nav-left">
+            <a href="/" class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M35 30 C35 20, 65 20, 65 30 Z" fill="#15803d"/><circle cx="42" cy="22" r="4" fill="#fff"/><circle cx="58" cy="22" r="4" fill="#fff"/><circle cx="42" cy="22" r="2" fill="#0a0a0f"/><circle cx="58" cy="22" r="2" fill="#0a0a0f"/><path d="M49 35 C30 35, 20 60, 30 85 C40 85, 49 75, 49 75 Z" fill="#1DB954"/><path d="M51 35 C70 35, 80 60, 70 85 C60 85, 51 75, 51 75 Z" fill="#1DB954"/><path d="M30 45 L15 35 M25 60 L10 60 M32 75 L18 85" stroke="#1DB954" stroke-width="5" stroke-linecap="round"/><path d="M70 45 L85 35 M75 60 L90 60 M68 75 L82 85" stroke="#1DB954" stroke-width="5" stroke-linecap="round"/><path d="M42 15 L38 5 M58 15 L62 5" stroke="#1DB954" stroke-width="4" stroke-linecap="round"/></svg>
+                <span>Patchly</span>
+            </a>
+        </div>
+        <div class="nav-center">
+            <span class="nav-title">Engineer Dashboard</span>
+        </div>
+        <div class="nav-right">
+            <span class="nav-user">🔧 {{ engineer_name }}</span>
+            <button class="btn-outline" onclick="openPasswordModal()">🔑 Change Password</button>
+            <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Navigation</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="#" class="nav-item active" onclick="switchView('view-home')">🏠 Home Dashboard</a></li>
+                <li class="nav-group-title">Work</li>
+                <li><a href="#" class="nav-item" onclick="switchView('view-tasks')">🐛 My Assigned Bugs</a></li>
+                <li class="nav-group-title">Metrics</li>
+                <li><a href="#" class="nav-item" onclick="switchView('view-penalties')">🏅 Performance Track Record</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            
+            <!-- VIEW: HOME (Default) -->
+            <div id="view-home" class="dashboard-view active-view">
+                <h1 style="margin-bottom: 24px; font-weight: 700;">Welcome, {{ engineer_name }}!</h1>
+                
+                <!-- KPI CARDS -->
+                <section class="kpi-row kpi-row-4" id="kpi-section" style="margin-bottom: 24px;">
+                    <div class="kpi-card" id="kpi-total">
+                        <div class="kpi-icon">📋</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-total">—</span><span class="kpi-label">Total Assigned</span></div>
+                    </div>
+                    <div class="kpi-card kpi-alert" id="kpi-open">
+                        <div class="kpi-icon">🔥</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-open">—</span><span class="kpi-label">Open Tasks</span></div>
+                    </div>
+                    <div class="kpi-card" id="kpi-done">
+                        <div class="kpi-icon">✅</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-done">—</span><span class="kpi-label">Completed</span></div>
+                    </div>
+                    <div class="kpi-card kpi-critical" id="kpi-overdue">
+                        <div class="kpi-icon">⏰</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-overdue">—</span><span class="kpi-label">Overdue</span></div>
+                    </div>
+                </section>
+
+                <!-- WORKLOAD GAUGE -->
+                <section class="section-card">
+                    <div class="section-header">
+                        <h2>📊 My Workload</h2>
+                    </div>
+                    <div class="workload-gauge" id="workload-gauge">
+                        <div class="gauge-bar-bg">
+                            <div class="gauge-bar-fill" id="gauge-fill"></div>
+                        </div>
+                        <div class="gauge-labels">
+                            <span id="gauge-text">0 / 10</span>
+                            <span id="gauge-status" class="badge badge-ok">NORMAL</span>
+                        </div>
+                    </div>
+                    <div class="penalty-summary" id="penalty-summary"></div>
+                </section>
+            </div>
+
+            <!-- VIEW: TASKS -->
+            <div id="view-tasks" class="dashboard-view" style="display:none;">
+                <!-- TASK TABS -->
+                <section class="section-card" style="height: calc(100vh - 124px); display: flex; flex-direction: column; margin-bottom: 0;">
+                    <div class="section-header">
+                        <h2>🐛 My Assigned Bugs</h2>
+                        <div class="section-actions">
+                            <button class="tab-btn active" id="tab-active" onclick="filterTasks('active')">Active</button>
+                            <button class="tab-btn" id="tab-completed" onclick="filterTasks('completed')">Completed</button>
+                            <button class="tab-btn" id="tab-all" onclick="filterTasks('all')">All</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap" style="flex: 1;">
+                        <table class="data-table" id="tasks-table">
+                            <thead>
+                                <tr>
+                                    <th>Bug ID</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Category</th>
+                                    <th>Deadline</th>
+                                    <th>SLA Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasks-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="empty-tasks" style="display:none;">
+                        <span>🎉</span> No tasks in this view
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: PENALTIES -->
+            <div id="view-penalties" class="dashboard-view" style="display:none;">
+                <h1 style="margin-bottom: 24px; font-weight: 700;">Performance Impact</h1>
+                <!-- KPI CARDS -->
+                <section class="kpi-row" style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div class="kpi-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239,68,68,0.2);">
+                        <div class="kpi-icon" style="color:#ef4444;">📉</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-tot-penalty" style="color:#ef4444;">0 pts</span><span class="kpi-label">Total Deductions</span></div>
+                    </div>
+                    <div class="kpi-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34,197,94,0.2);">
+                        <div class="kpi-icon" style="color:#22c55e;">📈</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-tot-bonus" style="color:#22c55e;">0 pts</span><span class="kpi-label">Total Bonuses</span></div>
+                    </div>
+                    <div class="kpi-card" style="background: rgba(255, 255, 255, 0.05);">
+                        <div class="kpi-icon">🏅</div>
+                        <div class="kpi-data"><span class="kpi-value" id="val-net-impact">0 pts</span><span class="kpi-label">Net Performance</span></div>
+                    </div>
+                </section>
+
+                <!-- PENALTY TRACK RECORD -->
+                <section class="section-card" style="height: calc(100vh - 280px); display: flex; flex-direction: column; margin-bottom: 0;">
+                    <div class="section-header">
+                        <h2>🏅 Performance Track Record</h2>
+                    </div>
+                    <div class="table-wrap" style="flex: 1;">
+                        <table class="data-table" id="penalties-table">
+                            <thead>
+                                <tr>
+                                    <th>Bug ID</th>
+                                    <th>Bug Title</th>
+                                    <th>Priority</th>
+                                    <th>Points Changed</th>
+                                    <th>Reason</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="penalties-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="empty-penalties" style="display:none;">
+                        <span>✨</span> No point deductions — keep up the great work!
+                    </div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div class="modal-overlay" id="password-modal" onclick="closePasswordModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>🔑 Change Password</h2>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <form id="change-password-form" onsubmit="submitPasswordChange(event)">
+                <div class="form-group">
+                    <label for="old-password">Current Password</label>
+                    <input type="password" id="old-password" placeholder="Enter current password" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" placeholder="Enter new password (min 4 chars)" required minlength="4">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm New Password</label>
+                    <input type="password" id="confirm-password" placeholder="Re-enter new password" required minlength="4">
+                </div>
+                <div class="password-msg" id="password-msg" style="display:none;"></div>
+                <button type="submit" class="btn-primary btn-full">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    // ─────────────────────────────────────
+    // SIDEBAR NAVIGATION
+    // ─────────────────────────────────────
+    function switchView(viewId) {
+        // Toggle view containers
+        document.querySelectorAll('.dashboard-view').forEach(v => v.style.display = 'none');
+        document.getElementById(viewId).style.display = 'block';
+        document.getElementById(viewId).classList.add('active-view');
+        
+        // Toggle nav item styles
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    let allTasks = [];
+    let currentFilter = 'active';
+
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        return res.json();
+    }
+
+    async function loadDashboard() {
+        loadStats();
+        loadTasks();
+        loadPenalties();
+    }
+
+    async function loadStats() {
+        const s = await fetchJSON('/api/engineer/stats');
+        document.getElementById('val-total').textContent = s.total_assigned;
+        document.getElementById('val-open').textContent = s.open_tasks;
+        document.getElementById('val-done').textContent = s.completed;
+        document.getElementById('val-overdue').textContent = s.overdue;
+
+        // Workload gauge
+        const pct = s.max_workload > 0 ? Math.round((s.current_workload / s.max_workload) * 100) : 0;
+        const fill = document.getElementById('gauge-fill');
+        fill.style.width = pct + '%';
+        fill.style.background = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#1DB954';
+        document.getElementById('gauge-text').textContent = `${s.current_workload} / ${s.max_workload} tasks`;
+        
+        const statusEl = document.getElementById('gauge-status');
+        if (pct >= 100) { statusEl.textContent = 'AT CAPACITY'; statusEl.className = 'badge badge-danger'; }
+        else if (pct >= 80) { statusEl.textContent = 'HEAVY'; statusEl.className = 'badge badge-warn'; }
+        else { statusEl.textContent = 'NORMAL'; statusEl.className = 'badge badge-ok'; }
+
+        // Penalty summary
+        const ps = document.getElementById('penalty-summary');
+        if (s.total_penalty > 0 || s.total_bonus > 0) {
+            ps.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                    <span style="color:#ef4444; font-weight:600;">Deducted: -${Number(s.total_penalty).toLocaleString()} pts</span>
+                    <span style="color:#22c55e; font-weight:600;">Bonus: +${Number(s.total_bonus).toLocaleString()} pts</span>
+                </div>
+            `;
+        } else {
+            ps.innerHTML = `<span class="penalty-clean">✅ Clean record!</span>`;
+        }
+        
+        // Update Impact Tab
+        document.getElementById('val-tot-penalty').textContent = '-' + Number(s.total_penalty).toLocaleString() + ' pts';
+        document.getElementById('val-tot-bonus').textContent = '+' + Number(s.total_bonus).toLocaleString() + ' pts';
+        
+        const netEl = document.getElementById('val-net-impact');
+        if (s.net_impact > 0) {
+            netEl.textContent = '-' + Number(s.net_impact).toLocaleString() + ' pts';
+            netEl.style.color = '#ef4444';
+        } else {
+            netEl.textContent = '+' + Math.abs(Number(s.net_impact)).toLocaleString() + ' pts';
+            netEl.style.color = '#22c55e';
+        }
+    }
+
+    async function loadTasks() {
+        allTasks = await fetchJSON('/api/engineer/tasks');
+        renderTasks();
+    }
+
+    function filterTasks(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + filter).classList.add('active');
+        renderTasks();
+    }
+
+    function renderTasks() {
+        let filtered = allTasks;
+        if (currentFilter === 'active') filtered = allTasks.filter(t => t.SlaStatus !== 'COMPLETED');
+        else if (currentFilter === 'completed') filtered = allTasks.filter(t => t.SlaStatus === 'COMPLETED');
+
+        const tbody = document.getElementById('tasks-tbody');
+        const empty = document.getElementById('empty-tasks');
+        
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        tbody.innerHTML = filtered.map(t => {
+            const slaClass = t.SlaStatus === 'COMPLETED' ? 'badge-ok' : t.SlaStatus === 'OVERDUE' ? 'badge-danger' : t.SlaStatus === 'URGENT' ? 'badge-warn' : 'badge-ok';
+            const dueDate = t.DueBy ? new Date(t.DueBy).toLocaleString('en-IN', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : '—';
+            const action = t.SlaStatus !== 'COMPLETED'
+                ? `<button class="btn-resolve" onclick="resolveBug(${t.AssignmentID})">✓ Resolve</button>`
+                : `<span class="badge badge-ok">Done</span>`;
+            return `<tr class="${t.SlaStatus === 'COMPLETED' ? 'row-completed' : t.SlaStatus === 'OVERDUE' ? 'row-overdue' : ''}">
+                <td>#${t.BugID}</td>
+                <td class="task-title">${t.Title}</td>
+                <td><span class="priority-badge priority-${t.PriorityLevel.toLowerCase()}">${t.PriorityLevel}</span></td>
+                <td>${t.CategoryName || '—'}</td>
+                <td>${dueDate}</td>
+                <td><span class="badge ${slaClass}">${t.SlaStatus}</span></td>
+                <td>${action}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    async function resolveBug(assignmentId) {
+        if (!confirm('Mark this bug as resolved?')) return;
+        const res = await fetch('/api/engineer/resolve', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ assignment_id: assignmentId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadStats();
+            loadTasks();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown'));
+        }
+    }
+
+    async function loadPenalties() {
+        const data = await fetchJSON('/api/engineer/penalties');
+        const tbody = document.getElementById('penalties-tbody');
+        const empty = document.getElementById('empty-penalties');
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        tbody.innerHTML = data.map(p => {
+            const date = new Date(p.CreatedAt).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+            
+            const amt = Number(p.Amount);
+            let displayAmt = '';
+            let styleClass = '';
+            if (amt < 0) {
+                displayAmt = '+' + Math.abs(amt) + ' pts';
+                styleClass = 'color: #22c55e; font-weight: 600;';
+            } else {
+                displayAmt = '-' + amt + ' pts';
+                styleClass = 'color: #ef4444; font-weight: 600;';
+            }
+            
+            return `<tr>
+                <td>#${p.BugID}</td>
+                <td>${p.BugTitle}</td>
+                <td><span class="priority-badge priority-${p.PriorityLevel.toLowerCase()}">${p.PriorityLevel}</span></td>
+                <td style="${styleClass}">${displayAmt}</td>
+                <td class="penalty-reason">${p.Reason || '—'}</td>
+                <td>${date}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ─── CHANGE PASSWORD ───
+    function openPasswordModal() {
+        document.getElementById('password-modal').classList.add('active');
+        document.getElementById('password-msg').style.display = 'none';
+        document.getElementById('change-password-form').reset();
+    }
+
+    function closePasswordModal() {
+        document.getElementById('password-modal').classList.remove('active');
+    }
+
+    async function submitPasswordChange(e) {
+        e.preventDefault();
+        const msgEl = document.getElementById('password-msg');
+        const newPass = document.getElementById('new-password').value;
+        const confirmPass = document.getElementById('confirm-password').value;
+        if (newPass !== confirmPass) {
+            msgEl.textContent = 'New passwords do not match!';
+            msgEl.className = 'password-msg password-error';
+            msgEl.style.display = 'block';
+            return;
+        }
+        const res = await fetch('/api/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ old_password: document.getElementById('old-password').value, new_password: newPass })
+        });
+        const data = await res.json();
+        if (data.success) {
+            msgEl.textContent = '✅ ' + data.message;
+            msgEl.className = 'password-msg password-success';
+            msgEl.style.display = 'block';
+            setTimeout(() => closePasswordModal(), 1500);
+        } else {
+            msgEl.textContent = data.error;
+            msgEl.className = 'password-msg password-error';
+            msgEl.style.display = 'block';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

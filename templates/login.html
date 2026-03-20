@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patchly — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">
+                <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M35 30 C35 20, 65 20, 65 30 Z" fill="#15803d"/>
+                    <circle cx="42" cy="22" r="4" fill="#fff"/>
+                    <circle cx="58" cy="22" r="4" fill="#fff"/>
+                    <circle cx="42" cy="22" r="2" fill="#0a0a0f"/>
+                    <circle cx="58" cy="22" r="2" fill="#0a0a0f"/>
+                    <path d="M49 35 C30 35, 20 60, 30 85 C40 85, 49 75, 49 75 Z" fill="#1DB954"/>
+                    <path d="M51 35 C70 35, 80 60, 70 85 C60 85, 51 75, 51 75 Z" fill="#1DB954"/>
+                    <path d="M30 45 L15 35 M25 60 L10 60 M32 75 L18 85" stroke="#1DB954" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M70 45 L85 35 M75 60 L90 60 M68 75 L82 85" stroke="#1DB954" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M42 15 L38 5 M58 15 L62 5" stroke="#1DB954" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h1>Patchly</h1>
+            <p class="subtitle">Spotify Bug Tracking Intelligence Platform</p>
+        </div>
+
+        <!-- ROLE SELECTOR -->
+        <div class="role-cards" id="role-cards">
+            <div class="role-card" onclick="selectRole('admin')" id="admin-card">
+                <div class="role-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </div>
+                <h2>Admin</h2>
+                <p>Manage engineers, view bugs by platform, track SLA breaches and penalties</p>
+                <span class="role-badge">Full Access</span>
+            </div>
+
+            <div class="role-card" onclick="selectRole('engineer')" id="engineer-card">
+                <div class="role-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                </div>
+                <h2>Engineer</h2>
+                <p>View assigned bugs, track deadlines, monitor personal SLA performance</p>
+                <span class="role-badge engineer-badge">Dashboard</span>
+            </div>
+        </div>
+
+        <!-- LOGIN FORM (hidden initially) -->
+        <div class="login-form-wrap" id="login-form-wrap" style="display:none;">
+            <button class="back-btn" onclick="goBack()">← Back to Role Selection</button>
+            <div class="login-role-indicator" id="login-role-indicator"></div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Enter your username" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                <div class="login-error" id="login-error" style="display:none;"></div>
+                <button type="submit" class="btn-primary btn-full" id="login-btn">Sign In</button>
+            </form>
+        </div>
+
+        <div class="login-footer">
+            <p>PatchlyDB v2.0 — DBMS Course Project &bull; Powered by Real Spotify Reviews</p>
+        </div>
+    </div>
+
+    <!-- FLOATING SUBMIT REVIEW PANEL -->
+    <div class="floating-review-panel">
+        <div class="review-panel-header" onclick="toggleReviewForm()">
+            <h3>📝 Add New Review</h3>
+            <span id="review-toggle-icon">▼</span>
+        </div>
+        <div id="review-form-body" style="display:none;">
+            <div class="form-group">
+                <label for="rev-name">Reviewer Name</label>
+                <input type="text" id="rev-name" placeholder="e.g. John Doe" value="TestUser">
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group">
+                    <label for="rev-rating">Rating</label>
+                    <select id="rev-rating" class="filter-select">
+                        <option value="1">⭐ 1 Star</option>
+                        <option value="2" selected>⭐⭐ 2 Stars</option>
+                        <option value="3">⭐⭐⭐ 3 Stars</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="rev-platform">Platform</label>
+                    <select id="rev-platform" class="filter-select">
+                        <option value="1">Apple Phone</option>
+                        <option value="2">Apple Laptop</option>
+                        <option value="3">Windows</option>
+                        <option value="4">Android</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rev-content">Review Content</label>
+                <textarea id="rev-content" class="review-textarea" rows="3" placeholder="App keeps crashing..."></textarea>
+            </div>
+            
+            <button class="btn-primary btn-full" onclick="submitReview()" id="submit-review-btn" style="margin-top:10px;">🤖 Analyze & Submit</button>
+
+            <div id="analysis-panel" class="review-form-right" style="display:none; margin-top:15px; padding:15px;">
+                <h3 style="margin-bottom:10px;font-size:0.85rem;">🧠 LLM Analysis Result</h3>
+                <div class="analysis-grid" id="analysis-grid" style="grid-template-columns:1fr;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let selectedRole = '';
+
+    function selectRole(role) {
+        selectedRole = role;
+        document.getElementById('role-cards').style.display = 'none';
+        document.getElementById('login-form-wrap').style.display = 'block';
+        const indicator = document.getElementById('login-role-indicator');
+        if (role === 'admin') {
+            indicator.innerHTML = '⭐ Signing in as <strong>Admin</strong>';
+            indicator.className = 'login-role-indicator role-admin';
+        } else {
+            indicator.innerHTML = '🔧 Signing in as <strong>Engineer</strong>';
+            indicator.className = 'login-role-indicator role-engineer';
+        }
+        document.getElementById('username').focus();
+    }
+
+    function goBack() {
+        document.getElementById('role-cards').style.display = 'grid';
+        document.getElementById('login-form-wrap').style.display = 'none';
+        document.getElementById('login-error').style.display = 'none';
+        document.getElementById('login-form').reset();
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('login-btn');
+        btn.textContent = 'Signing in...';
+        btn.disabled = true;
+
+        const body = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+            role: selectedRole
+        };
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                const errEl = document.getElementById('login-error');
+                errEl.textContent = data.error || 'Invalid credentials';
+                errEl.style.display = 'block';
+            }
+        } catch(err) {
+            const errEl = document.getElementById('login-error');
+            errEl.textContent = 'Server error. Please try again.';
+            errEl.style.display = 'block';
+        }
+
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+    }
+
+    // ─────────────────────────────────────
+    // SUBMIT TEST REVIEW
+    // ─────────────────────────────────────
+    function toggleReviewForm() {
+        const body = document.getElementById('review-form-body');
+        const icon = document.getElementById('review-toggle-icon');
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            icon.textContent = '▲';
+        } else {
+            body.style.display = 'none';
+            icon.textContent = '▼';
+        }
+    }
+
+    async function submitReview() {
+        const btn = document.getElementById('submit-review-btn');
+        const content = document.getElementById('rev-content').value;
+        if (!content || content.length < 5) return alert('Please enter a review (at least 5 characters)');
+        
+        btn.textContent = '🔄 Analyzing...';
+        btn.disabled = true;
+
+        const res = await fetch('/api/submit-review', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                content: content,
+                rating: document.getElementById('rev-rating').value,
+                platform_id: document.getElementById('rev-platform').value,
+                reviewer_name: document.getElementById('rev-name').value
+            })
+        });
+        const data = await res.json();
+        btn.textContent = '🤖 Analyze & Submit';
+        btn.disabled = false;
+
+        if (data.success) {
+            const a = data.analysis;
+            const sentColors = {'Angry':'#ef4444','Frustrated':'#fb923c','Negative':'#f87171'};
+            const prioColors = {'Critical':'#ef4444','High':'#f59e0b','Medium':'#60a5fa'};
+            document.getElementById('analysis-panel').style.display = 'block';
+            document.getElementById('analysis-grid').innerHTML = `
+                <div class="analysis-item" style="flex-direction:row; justify-content:space-between">
+                    <span class="analysis-label">Sentiment</span>
+                    <span class="analysis-value" style="color:${sentColors[a.sentiment] || '#94a3b8'}">${a.sentiment}</span>
+                </div>
+                <div class="analysis-item" style="flex-direction:row; justify-content:space-between">
+                    <span class="analysis-label">Category</span>
+                    <span class="analysis-value">${a.category}</span>
+                </div>
+                <div class="analysis-item" style="flex-direction:row; justify-content:space-between">
+                    <span class="analysis-label">Priority</span>
+                    <span class="analysis-value" style="color:${prioColors[a.priority] || '#94a3b8'}">${a.priority}</span>
+                </div>
+                <div class="analysis-item" style="flex-direction:row; justify-content:space-between">
+                    <span class="analysis-label">Assigned</span>
+                    <span class="analysis-value" style="color:#1DB954">${a.assigned_to}</span>
+                </div>
+            `;
+        } else {
+            alert('Error: ' + (data.error || 'Unknown'));
+        }
+    }
+    </script>
+</body>
+</html>

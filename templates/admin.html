@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patchly — Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="admin-body">
+    <!-- TOP NAV -->
+    <nav class="topnav">
+        <div class="nav-left">
+            <a href="/" class="nav-logo">
+                <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M35 30 C35 20, 65 20, 65 30 Z" fill="#15803d"/><circle cx="42" cy="22" r="4" fill="#fff"/><circle cx="58" cy="22" r="4" fill="#fff"/><circle cx="42" cy="22" r="2" fill="#0a0a0f"/><circle cx="58" cy="22" r="2" fill="#0a0a0f"/><path d="M49 35 C30 35, 20 60, 30 85 C40 85, 49 75, 49 75 Z" fill="#1DB954"/><path d="M51 35 C70 35, 80 60, 70 85 C60 85, 51 75, 51 75 Z" fill="#1DB954"/><path d="M30 45 L15 35 M25 60 L10 60 M32 75 L18 85" stroke="#1DB954" stroke-width="5" stroke-linecap="round"/><path d="M70 45 L85 35 M75 60 L90 60 M68 75 L82 85" stroke="#1DB954" stroke-width="5" stroke-linecap="round"/><path d="M42 15 L38 5 M58 15 L62 5" stroke="#1DB954" stroke-width="4" stroke-linecap="round"/></svg>
+                <span>Patchly</span>
+            </a>
+        </div>
+        <div class="nav-center">
+            <span class="nav-title">Admin Dashboard</span>
+        </div>
+        <div class="nav-right">
+            <span class="nav-user">👤 Admin</span>
+            <button class="btn-outline" onclick="openPasswordModal()">🔑 Change Password</button>
+            <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Navigation</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="#" class="nav-item active" onclick="switchView('view-home')">🏠 Home Dashboard</a></li>
+                <li class="nav-group-title">Triage</li>
+                <li><a href="#" class="nav-item" onclick="switchView('view-triage'); loadTriageBugs();">🚨 Pending Triage</a></li>
+                <li class="nav-group-title">Platforms</li>
+                <li><a href="#" class="nav-item platform-link" onclick="switchView('view-platform', 1, 'Apple Phone')">📱 Apple Phone</a></li>
+                <li><a href="#" class="nav-item platform-link" onclick="switchView('view-platform', 2, 'Apple Laptop')">💻 Apple Laptop</a></li>
+                <li><a href="#" class="nav-item platform-link" onclick="switchView('view-platform', 3, 'Windows')">🪟 Windows</a></li>
+                <li><a href="#" class="nav-item platform-link" onclick="switchView('view-platform', 4, 'Android')">🤖 Android</a></li>
+                <li class="nav-group-title">Management</li>
+                <li><a href="#" class="nav-item" onclick="switchView('view-engineers')">👨‍💻 Engineers</a></li>
+                <li><a href="#" class="nav-item" onclick="switchView('view-sla')">⏰ SLA & Performance</a></li>
+                <li><a href="#" class="nav-item" onclick="switchView('view-sentiments')">🧠 Sentiments Stats</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
+            
+            <!-- VIEW: HOME (Default) -->
+            <div id="view-home" class="dashboard-view active-view">
+                <div class="home-grid">
+                    <!-- LEFT COLUMN -->
+                    <div class="home-left-col">
+                        <!-- KPI CARDS -->
+                        <section class="kpi-row" id="kpi-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                            <div class="kpi-card" id="kpi-reviews">
+                                <div class="kpi-icon">📝</div>
+                                <div class="kpi-data"><span class="kpi-value" id="val-reviews">—</span><span class="kpi-label">Total Reviews</span></div>
+                            </div>
+                            <div class="kpi-card" id="kpi-bugs">
+                                <div class="kpi-icon">🐛</div>
+                                <div class="kpi-data"><span class="kpi-value" id="val-bugs">—</span><span class="kpi-label">Total Bugs</span></div>
+                            </div>
+                            <div class="kpi-card kpi-alert" id="kpi-open">
+                                <div class="kpi-icon">⚠️</div>
+                                <div class="kpi-data"><span class="kpi-value" id="val-open">—</span><span class="kpi-label">Open Bugs</span></div>
+                            </div>
+                            <div class="kpi-card kpi-critical" id="kpi-critical">
+                                <div class="kpi-icon">🔴</div>
+                                <div class="kpi-data"><span class="kpi-value" id="val-critical">—</span><span class="kpi-label">Critical</span></div>
+                            </div>
+                        </section>
+
+                        <!-- PIE CHART: BUGS BY PRIORITY -->
+                        <section class="section-card chart-card">
+                            <div class="section-header">
+                                <h2>📊 Bug Priority Distribution</h2>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="priorityPieChart"></canvas>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- RECENT BUG LOG -->
+                    <section class="section-card log-card">
+                        <div class="section-header">
+                            <h2>🚨 Recent App Bug Log</h2>
+                            <div class="header-actions" style="display:flex; gap:10px; align-items: center;">
+                                <input type="text" id="bug-search-input" placeholder="Search bugs..." class="filter-select" oninput="debounceLoadHomeBugs()">
+                                <select id="bug-status-filter" class="filter-select" onchange="loadHomeBugs()">
+                                    <option value="">All Statuses</option>
+                                    <option value="Open">Open</option>
+                                    <option value="Resolved">Resolved</option>
+                                </select>
+                                <button class="btn-primary" onclick="loadHomeBugs()" title="Sync Data">🔄 Sync</button>
+                            </div>
+                        </div>
+                        <div class="table-wrap log-table-wrap">
+                            <table class="data-table" id="recent-bugs-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Date</th>
+                                        <th>Platform</th>
+                                        <th>Review Snippet</th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-bugs-tbody"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- VIEW: TRIAGE -->
+            <div id="view-triage" class="dashboard-view" style="display:none;">
+                <section class="section-card">
+                    <div class="section-header">
+                        <h2>🚨 Bugs Pending Assignment</h2>
+                        <button class="btn-primary" onclick="loadTriageBugs()">🔄 Refresh</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="triage-table">
+                            <thead>
+                                <tr>
+                                    <th>Bug ID</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Category</th>
+                                    <th>Created At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="triage-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="empty-state" id="empty-triage" style="display:none; text-align:center; padding: 30px; color: var(--text-muted);">
+                        <span style="font-size: 2rem;">🎉</span> <br>No unassigned bugs!
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: PLATFORM DETAILS -->
+            <div id="view-platform" class="dashboard-view" style="display:none;">
+                <div class="platform-header-row">
+                    <h2 id="platform-view-title" style="margin: 0; padding-bottom:10px; border-bottom:1px solid var(--border);">Platform Bugs</h2>
+                    <div class="filter-controls" style="margin-top:15px; margin-bottom: 15px;">
+                        <label for="category-filter" style="color:var(--text-muted); font-size: 0.9rem; margin-right:10px;">Filter by Category:</label>
+                        <select id="category-filter" class="filter-select" onchange="loadPlatformBugs(currentPlatformId, 1)">
+                            <option value="">All Categories</option>
+                            <option value="1">UI/UX</option>
+                            <option value="2">Audio Playback</option>
+                            <option value="3">App Crash</option>
+                            <option value="4">Connectivity</option>
+                            <option value="5">Account/Billing</option>
+                        </select>
+                    </div>
+                </div>
+
+                <section class="section-card">
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Bug ID</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Description snippet</th>
+                                    <th>Assigned To</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="platform-bugs-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn-outline" id="prev-btn" onclick="changePage(-1)">← Previous</button>
+                        <span id="page-indicator">Page 1</span>
+                        <button class="btn-outline" id="next-btn" onclick="changePage(1)">Next →</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: ENGINEERS -->
+            <div id="view-engineers" class="dashboard-view" style="display:none;">
+                <section class="section-card">
+                    <div class="section-header">
+                        <h2>👥 Engineering Team Workloads</h2>
+                        <div class="header-actions" style="display:flex; gap:10px;">
+                            <select id="dept-filter" class="filter-select" onchange="loadEngineers()">
+                                <option value="">All Departments</option>
+                            </select>
+                            <button class="btn-primary" onclick="openAddEngineerModal()">+ Add Engineer</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="engineers-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Skills</th>
+                                    <th>Workload</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="engineers-tbody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: SLA & PENALTIES -->
+            <div id="view-sla" class="dashboard-view" style="display:none;">
+                <section class="section-card">
+                    <div class="section-header">
+                        <h2>⚡ SLA Performance Report</h2>
+                        <select id="sla-sort-filter" class="filter-select" onchange="loadSLA()">
+                            <option value="desc">Lowest Performance (Most Points Deducted)</option>
+                            <option value="asc">Highest Performance (Fewest Points Deducted)</option>
+                        </select>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="sla-table">
+                            <thead>
+                                <tr>
+                                    <th>Engineer</th>
+                                    <th>Department</th>
+                                    <th>SLA Breaches</th>
+                                    <th>Total Points Deducted</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sla-tbody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="section-card" style="margin-top:20px;">
+                    <div class="section-header">
+                        <h2>⚡ Resolution Performance vs SLA Target</h2>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table" id="resolution-table">
+                            <thead>
+                                <tr>
+                                    <th>Priority</th>
+                                    <th>Resolved</th>
+                                    <th>Avg Resolution (hrs)</th>
+                                    <th>SLA Target (hrs)</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resolution-tbody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW: SENTIMENTS -->
+            <div id="view-sentiments" class="dashboard-view" style="display:none;">
+                <section class="section-card">
+                    <div class="section-header">
+                        <h2>💬 Sentiment Analysis</h2>
+                    </div>
+                    <div class="sentiment-grid" id="sentiment-grid"></div>
+                </section>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ASSIGN BUG MODAL -->
+    <div class="modal-overlay" id="assign-modal" onclick="closeAssignModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>👤 Assign Bug <span id="assign-bug-id"></span></h2>
+                <button class="modal-close" onclick="closeAssignModal()">&times;</button>
+            </div>
+            <form id="assign-bug-form" onsubmit="submitAssignBug(event, false)">
+                <input type="hidden" id="assign-bug-id-input">
+                <div class="form-group">
+                    <label for="assign-sla-hours">Resolution SLA (Hours)</label>
+                    <input type="number" id="assign-sla-hours" value="24" min="1" max="168" required>
+                    <small style="color:var(--text-muted);">Admin deadline control.</small>
+                </div>
+                
+                <div style="margin: 20px 0; padding: 15px; background: rgba(29, 185, 84, 0.1); border-radius: 8px; text-align: center; display:none;" id="auto-assign-box">
+                    <p style="margin-top:0; color: #1DB954; font-weight:600;">✨ Skill-match available!</p>
+                    <button type="button" class="btn-primary btn-full" onclick="submitAssignBug(event, true)">Auto-Assign to Best Match</button>
+                    <p style="margin-bottom:0; font-size: 0.85rem; color:var(--text-muted); margin-top:10px;">Or assign manually below:</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="assign-engineer-select">Manual Selection (All Engineers)</label>
+                    <select id="assign-engineer-select">
+                        <option value="">Select Engineer...</option>
+                    </select>
+                </div>
+                <div class="password-msg" id="assign-msg" style="display:none;"></div>
+                <button type="submit" class="btn-outline btn-full">Manual Assign</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD ENGINEER MODAL -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Add New Engineer</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="add-engineer-form" onsubmit="submitEngineer(event)">
+                <div class="form-group">
+                    <label for="eng-name">Full Name</label>
+                    <input type="text" id="eng-name" placeholder="e.g. Jane Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="eng-email">Email</label>
+                    <input type="email" id="eng-email" placeholder="e.g. jane.d@patchly.local" required>
+                </div>
+                <div class="form-group">
+                    <label for="eng-dept">Department</label>
+                    <select id="eng-dept" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="eng-workload">Max Workload</label>
+                    <input type="number" id="eng-workload" value="10" min="1" max="50">
+                </div>
+                <div class="form-group">
+                    <label>Skills</label>
+                    <div id="skills-checkboxes" class="checkbox-grid"></div>
+                </div>
+                <button type="submit" class="btn-primary btn-full">Add Engineer to Team</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div class="modal-overlay" id="password-modal" onclick="closePasswordModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>🔑 Change Password</h2>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <form id="change-password-form" onsubmit="submitPasswordChange(event)">
+                <div class="form-group">
+                    <label for="old-password">Current Password</label>
+                    <input type="password" id="old-password" placeholder="Enter current password" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <input type="password" id="new-password" placeholder="Enter new password (min 4 chars)" required minlength="4">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm New Password</label>
+                    <input type="password" id="confirm-password" placeholder="Re-enter new password" required minlength="4">
+                </div>
+                <div class="password-msg" id="password-msg" style="display:none;"></div>
+                <button type="submit" class="btn-primary btn-full">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    // ─────────────────────────────────────
+    // STATE MANAGEMENT
+    // ─────────────────────────────────────
+    let currentPlatformId = null;
+    let pieChartInstance = null;
+
+    // ─────────────────────────────────────
+    // SIDEBAR NAVIGATION
+    // ─────────────────────────────────────
+    function switchView(viewId, platformId = null, platformName = null) {
+        // Toggle view containers
+        document.querySelectorAll('.dashboard-view').forEach(v => v.style.display = 'none');
+        document.getElementById(viewId).style.display = 'block';
+        document.getElementById(viewId).classList.add('active-view');
+        
+        // Toggle nav item styles
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Logic based on view
+        if (viewId === 'view-platform') {
+            currentPlatformId = platformId;
+            document.getElementById('platform-view-title').textContent = `${platformName} Bugs`;
+            document.getElementById('category-filter').value = ''; // Reset filter
+            loadPlatformBugs(platformId, 1);
+        }
+    }
+
+    // ─────────────────────────────────────
+    // DATA LOADING
+    // ─────────────────────────────────────
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        return res.json();
+    }
+
+    async function loadDashboard() {
+        loadStats();
+        loadHomeBugs();
+        loadBugStatsChart();
+        loadEngineers();
+        loadSentiments();
+        loadResolution();
+        loadSLA();
+        loadDepartmentFilter();
+        loadTriageBugs();
+    }
+
+    async function loadStats() {
+        const s = await fetchJSON('/api/dashboard-stats');
+        document.getElementById('val-reviews').textContent = s.total_reviews;
+        document.getElementById('val-bugs').textContent = s.total_bugs;
+        document.getElementById('val-open').textContent = s.open_bugs;
+        document.getElementById('val-critical').textContent = s.critical_bugs;
+        document.getElementById('val-engineers').textContent = s.total_engineers;
+        document.getElementById('val-sla').textContent = s.sla_breaches;
+    }
+
+    async function loadBugStatsChart() {
+        const data = await fetchJSON('/api/bug-stats');
+        const ctx = document.getElementById('priorityPieChart').getContext('2d');
+        
+        const labels = data.map(d => d.PriorityLevel);
+        const counts = data.map(d => d.Count);
+        const bgColors = {
+            'Critical': '#ef4444',
+            'High': '#f59e0b',
+            'Medium': '#60a5fa'
+        };
+
+        if(pieChartInstance) { pieChartInstance.destroy(); }
+        
+        pieChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: labels.map(l => bgColors[l] || '#94a3b8'),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#e2e8f0'} }
+                }
+            }
+        });
+    }
+
+    let homeBugsTimeout = null;
+    function debounceLoadHomeBugs() {
+        if (homeBugsTimeout) clearTimeout(homeBugsTimeout);
+        homeBugsTimeout = setTimeout(loadHomeBugs, 300);
+    }
+
+    async function loadHomeBugs() {
+        const searchBox = document.getElementById('bug-search-input');
+        const statusSelect = document.getElementById('bug-status-filter');
+        const search = searchBox ? searchBox.value : '';
+        const statusStr = statusSelect ? statusSelect.value : '';
+        
+        const url = `/api/recent-bugs?search=${encodeURIComponent(search)}&status=${encodeURIComponent(statusStr)}`;
+        const bugs = await fetchJSON(url);
+        const tbody = document.getElementById('recent-bugs-tbody');
+        tbody.innerHTML = bugs.map(b => `
+            <tr>
+                <td>#${b.BugID}</td>
+                <td style="color:var(--text-muted); font-size:0.8rem;">${b.CreatedAt}</td>
+                <td><strong>${b.PlatformName}</strong></td>
+                <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${b.FullReview || b.Snippet}">"${b.Snippet}..."</td>
+                <td><span class="priority-badge priority-${b.PriorityLevel.toLowerCase()}">${b.PriorityLevel}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    // Platform Pagination
+    let currentPage = 1;
+    async function loadPlatformBugs(platformId, page) {
+        currentPage = page;
+        const categoryId = document.getElementById('category-filter').value;
+        const url = `/api/bugs-list?platform_id=${platformId}&page=${page}${categoryId ? '&category_id='+categoryId : ''}`;
+        const data = await fetchJSON(url);
+        
+        const tbody = document.getElementById('platform-bugs-tbody');
+        if (data.bugs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">No bugs found for this filter.</td></tr>';
+        } else {
+            tbody.innerHTML = data.bugs.map(b => `
+                <tr>
+                    <td>#${b.BugID}</td>
+                    <td><span class="badge badge-ok">${b.CategoryName}</span></td>
+                    <td><span class="priority-badge priority-${b.PriorityLevel.toLowerCase()}">${b.PriorityLevel}</span></td>
+                    <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">"${b.Snippet}..."</td>
+                    <td><strong>${b.AssignedTo}</strong></td>
+                    <td style="color: ${b.Status==='Resolved' ? '#1DB954' : '#f59e0b'}; font-weight:600;">${b.Status}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Pagination buttons state
+        document.getElementById('page-indicator').textContent = `Page ${data.page}`;
+        document.getElementById('prev-btn').disabled = data.page <= 1;
+        document.getElementById('next-btn').disabled = !data.has_more;
+    }
+
+    function changePage(delta) {
+        loadPlatformBugs(currentPlatformId, currentPage + delta);
+    }
+
+    async function loadEngineers(dept) {
+        const url = dept ? `/api/engineers?department=${encodeURIComponent(dept)}` : '/api/engineers';
+        const data = await fetchJSON(url);
+        const tbody = document.getElementById('engineers-tbody');
+        tbody.innerHTML = data.map(e => {
+            const pct = e.MaxWorkload > 0 ? Math.round((e.CurrentWorkload / e.MaxWorkload) * 100) : 0;
+            const barColor = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#1DB954';
+            const statusClass = e.WorkloadStatus === 'AT CAPACITY' ? 'badge-danger' : e.WorkloadStatus === 'HEAVY' ? 'badge-warn' : 'badge-ok';
+            return `<tr>
+                <td>${e.EngineerID}</td>
+                <td><strong>${e.EngineerName}</strong></td>
+                <td>${e.DepartmentName}</td>
+                <td><span class="skill-tags">${(e.Skills || 'None').split(', ').map(s => `<span class="skill-tag">${s}</span>`).join('')}</span></td>
+                <td>
+                    <div class="workload-cell">
+                        <div class="workload-bar-bg">
+                            <div class="workload-bar-fill" style="width:${pct}%; background:${barColor}"></div>
+                        </div>
+                        <span class="workload-text">${e.CurrentWorkload}/${e.MaxWorkload}</span>
+                    </div>
+                </td>
+                <td><span class="badge ${statusClass}">${e.WorkloadStatus}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    async function loadSentiments() {
+        const data = await fetchJSON('/api/sentiments');
+        const grid = document.getElementById('sentiment-grid');
+        const maxReviews = Math.max(...data.map(d => d.ReviewCount));
+        const sentColors = {'Negative': '#f87171', 'Frustrated': '#fb923c', 'Angry': '#ef4444', 'Positive': '#34d399', 'Neutral': '#94a3b8'};
+        grid.innerHTML = data.map(s => {
+            const w = Math.max(10, (s.ReviewCount / maxReviews) * 100);
+            return `
+            <div class="sentiment-row">
+                <div class="sentiment-label">${s.SentimentType}</div>
+                <div class="sentiment-bar-wrap">
+                    <div class="sentiment-bar" style="width:${w}%; background:${sentColors[s.SentimentType] || '#64748b'}">
+                        <span>${s.ReviewCount} reviews → ${s.BugsGenerated} bugs</span>
+                    </div>
+                </div>
+                <div class="sentiment-rate">${s.ConversionRate}%</div>
+            </div>`;
+        }).join('');
+    }
+
+    async function loadResolution() {
+        const data = await fetchJSON('/api/resolution-stats');
+        const tbody = document.getElementById('resolution-tbody');
+        tbody.innerHTML = data.map(r => {
+            const met = r.AvgResolutionHours <= r.TargetSLA;
+            return `<tr>
+                <td><span class="priority-badge priority-${r.PriorityLevel.toLowerCase()}">${r.PriorityLevel}</span></td>
+                <td>${r.TotalResolved}</td>
+                <td>${r.AvgResolutionHours} hrs</td>
+                <td>${r.TargetSLA} hrs</td>
+                <td><span class="badge ${met ? 'badge-ok' : 'badge-danger'}">${met ? '✅ Within SLA' : '❌ Over SLA'}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    async function loadSLA() {
+        const order = document.getElementById('sla-sort-filter').value;
+        const data = await fetchJSON(`/api/sla-breaches?order=${order}`);
+        const tbody = document.getElementById('sla-tbody');
+        tbody.innerHTML = data.map(r => `
+            <tr>
+                <td><strong>${r.Name}</strong></td>
+                <td>${r.DepartmentName}</td>
+                <td>${r.TotalSlaBreaches}</td>
+                <td class="${r.TotalPenaltyCost > 0 ? 'penalty-cost' : ''}">${Number(r.TotalPenaltyCost).toLocaleString()} pts</td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadDepartmentFilter() {
+        const depts = await fetchJSON('/api/departments');
+        const select = document.getElementById('dept-filter');
+        depts.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.DepartmentName;
+            opt.textContent = d.DepartmentName;
+            select.appendChild(opt);
+        });
+        select.addEventListener('change', () => loadEngineers(select.value));
+    }
+
+    // ─────────────────────────────────────
+    // BUG TRIAGE
+    // ─────────────────────────────────────
+    async function loadTriageBugs() {
+        const data = await fetchJSON('/api/admin/unassigned-bugs');
+        const tbody = document.getElementById('triage-tbody');
+        const empty = document.getElementById('empty-triage');
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        tbody.innerHTML = data.map(b => {
+            const date = new Date(b.CreatedAt).toLocaleString();
+            return `<tr>
+                <td>#${b.BugID}</td>
+                <td>${b.Title}</td>
+                <td><span class="priority-badge priority-${b.PriorityLevel.toLowerCase()}">${b.PriorityLevel}</span></td>
+                <td>${b.CategoryName || '—'}</td>
+                <td>${date}</td>
+                <td><button class="btn-primary" onclick="openAssignModal(${b.BugID}, '${b.PriorityLevel}')">Assign</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    async function openAssignModal(bugId, priority) {
+        document.getElementById('assign-modal').classList.add('active');
+        document.getElementById('assign-bug-id').textContent = '#' + bugId;
+        document.getElementById('assign-bug-id-input').value = bugId;
+        document.getElementById('assign-msg').style.display = 'none';
+        
+        // Auto-suggest SLA based on priority
+        const hours = priority === 'Critical' ? 4 : priority === 'High' ? 24 : 72;
+        document.getElementById('assign-sla-hours').value = hours;
+
+        // Fetch triage info
+        const info = await fetchJSON('/api/admin/triage-info/' + bugId);
+        
+        // Setup Auto box
+        const autoBox = document.getElementById('auto-assign-box');
+        if (info.auto_available) {
+            autoBox.style.display = 'block';
+        } else {
+            autoBox.style.display = 'none';
+        }
+
+        const select = document.getElementById('assign-engineer-select');
+        select.innerHTML = '<option value="">Select Engineer...</option>' + info.all_engineers.map(e => 
+            `<option value="${e.EngineerID}">${e.Name} (Workload: ${e.CurrentWorkload}/${e.MaxWorkload})</option>`
+        ).join('');
+    }
+
+    function closeAssignModal() {
+        document.getElementById('assign-modal').classList.remove('active');
+    }
+
+    async function submitAssignBug(e, isAuto) {
+        if(e) e.preventDefault();
+        const bugId = document.getElementById('assign-bug-id-input').value;
+        const engineerId = document.getElementById('assign-engineer-select').value;
+        const slaHours = document.getElementById('assign-sla-hours').value;
+        const msgEl = document.getElementById('assign-msg');
+        
+        if (!isAuto && !engineerId) {
+            msgEl.textContent = 'Please select an engineer for manual assignment.';
+            msgEl.className = 'password-msg password-error';
+            msgEl.style.display = 'block';
+            return;
+        }
+
+        const res = await fetch('/api/admin/assign-bug', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ bug_id: bugId, engineer_id: engineerId, sla_hours: slaHours, is_auto: isAuto })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            msgEl.innerHTML = `✅ Assigned to <strong>${data.assigned_to}</strong>!`;
+            msgEl.className = 'password-msg password-success';
+            msgEl.style.display = 'block';
+            setTimeout(() => {
+                closeAssignModal();
+                loadTriageBugs();
+                loadStats();
+                loadEngineers();
+            }, 1200);
+        } else {
+            msgEl.textContent = data.error;
+            msgEl.className = 'password-msg password-error';
+            msgEl.style.display = 'block';
+        }
+    }
+
+    // ─────────────────────────────────────
+    // ADD ENGINEER MODAL
+    // ─────────────────────────────────────
+    async function openAddEngineerModal() {
+        document.getElementById('modal-overlay').classList.add('active');
+        const depts = await fetchJSON('/api/departments');
+        const skills = await fetchJSON('/api/skills');
+        const deptSelect = document.getElementById('eng-dept');
+        deptSelect.innerHTML = '<option value="">Select...</option>' + depts.map(d => `<option value="${d.DepartmentID}">${d.DepartmentName}</option>`).join('');
+        const skillsDiv = document.getElementById('skills-checkboxes');
+        skillsDiv.innerHTML = skills.map(s => `<label class="checkbox-label"><input type="checkbox" value="${s.SkillID}"> ${s.SkillName}</label>`).join('');
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').classList.remove('active');
+    }
+
+    async function submitEngineer(e) {
+        e.preventDefault();
+        const skillChecks = document.querySelectorAll('#skills-checkboxes input:checked');
+        const body = {
+            name: document.getElementById('eng-name').value,
+            email: document.getElementById('eng-email').value,
+            department_id: document.getElementById('eng-dept').value,
+            max_workload: document.getElementById('eng-workload').value,
+            skill_ids: Array.from(skillChecks).map(c => c.value)
+        };
+        const res = await fetch('/api/engineers', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.success) {
+            closeModal();
+            document.getElementById('add-engineer-form').reset();
+            loadEngineers();
+            loadStats();
+        } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+        }
+    }
+
+    // ─────────────────────────────────────
+    // CHANGE PASSWORD MODAL
+    // ─────────────────────────────────────
+    function openPasswordModal() {
+        document.getElementById('password-modal').classList.add('active');
+        document.getElementById('password-msg').style.display = 'none';
+        document.getElementById('change-password-form').reset();
+        document.getElementById('old-password').focus();
+    }
+
+    function closePasswordModal() {
+        document.getElementById('password-modal').classList.remove('active');
+    }
+
+    async function submitPasswordChange(e) {
+        e.preventDefault();
+        const msgEl = document.getElementById('password-msg');
+        const newPass = document.getElementById('new-password').value;
+        const confirmPass = document.getElementById('confirm-password').value;
+
+        if (newPass !== confirmPass) {
+            msgEl.textContent = 'New passwords do not match!';
+            msgEl.className = 'password-msg password-error';
+            msgEl.style.display = 'block';
+            return;
+        }
+
+        const res = await fetch('/api/change-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                old_password: document.getElementById('old-password').value,
+                new_password: newPass
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            msgEl.textContent = '✅ ' + data.message;
+            msgEl.className = 'password-msg password-success';
+            msgEl.style.display = 'block';
+            setTimeout(() => closePasswordModal(), 1500);
+        } else {
+            msgEl.textContent = data.error;
+            msgEl.className = 'password-msg password-error';
+            msgEl.style.display = 'block';
+        }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
